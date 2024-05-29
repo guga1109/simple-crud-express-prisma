@@ -1,7 +1,8 @@
 ﻿import express from 'express';
 import session, {MemoryStore} from 'express-session';
-import { createPost, getPosts, getPost } from "./controllers/posts.controller";
+import {createPost, getPosts, getPost, deletePost, updatePost} from "./controllers/posts.controller";
 import { login, logout, signUp } from "./controllers/users.controller";
+import {isAuthenticated} from "./auth/middleware";
 
 interface User {
     id: number,
@@ -35,13 +36,11 @@ app.get('/', getPosts);
 
 app.get('/post', getPost);
 
-app.post('/create', (req, res, next) => {
-    if (!req.session.user) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
-    next();
-}, createPost);
+app.post('/create', isAuthenticated, createPost);
+
+app.post('/delete/:id', isAuthenticated, deletePost);
+
+app.put('/update', isAuthenticated, updatePost);
 
 app.post('/login', login);
 

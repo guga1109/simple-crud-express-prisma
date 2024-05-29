@@ -36,7 +36,6 @@ export const login = async (req: Request, res: Response) => {
             });
         
         req.session.save(function(err)  {
-           req.session.logged_in = true;
            req.session.user = {
                id: user.id,
                name: user.name
@@ -54,6 +53,19 @@ export const signUp = async (req: Request, res: Response) => {
         const { name, email, password } = req.body;
 
         const validation = await validate(new User(email, password, name));
+        
+        const existingUser = await prisma.user.findUnique({
+            where: {
+                email: email
+            }
+        })
+        
+        if (existingUser)
+        {
+            return res.status(400).json({
+                error: "Email already in use"
+            })
+        }
 
         if (validation.length > 0){
             return res.status(400).send({
@@ -63,7 +75,9 @@ export const signUp = async (req: Request, res: Response) => {
         
         await prisma.user.signUp(name, email, password);
         
-        return res.status(200).send;
+        return res.status(200).json({
+            message: 'Account created successfully',
+        });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });
     }
@@ -71,7 +85,6 @@ export const signUp = async (req: Request, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
     req.session.save(() => {
-        req.session.logged_in = false;
         req.session.user = undefined;
         
         return res.status(200).redirect('/');

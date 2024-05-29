@@ -21,10 +21,10 @@ export class Post {
     })
     active: boolean;
     
-    constructor(title:string,  name: string, content: string, authorId: number) {
+    constructor(title:string, content: string, active: boolean, authorId: number) {
         this.title = title;
         this.content = content;
         this.authorId = authorId;
-        this.active = true;
+        this.active = active;
     }
 }

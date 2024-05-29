@@ -1,15 +1,54 @@
 ﻿import express from 'express';
+import session, {MemoryStore} from 'express-session';
 import { createPost, getPosts, getPost } from "./controllers/posts.controller";
+import { login, logout, signUp } from "./controllers/users.controller";
 
-const server = express();
-server.use(express.json());
+interface User {
+    id: number,
+    name: string
+}
 
-server.get('/', getPosts);
+declare module 'express-session' {
+    interface SessionData {
+        user: User, 
+        logged_in: boolean
+    }
+}
 
-server.get('/post', getPost);
+const app = express();
 
-server.post('/create', createPost);
+const store = new MemoryStore();
 
-server.listen(3000, () => {
+app.use(express.json());
+app.use(session({
+    secret: process.env.SESSION_SECRET as string,
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        maxAge: 3600000,
+        secure: false
+    },
+    store: store
+}));
+
+app.get('/', getPosts);
+
+app.get('/post', getPost);
+
+app.post('/create', (req, res, next) => {
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    next();
+}, createPost);
+
+app.post('/login', login);
+
+app.post('/signUp', signUp);
+
+app.post('/logout', logout);
+
+app.listen(3000, () => {
     console.log('Listening on port 3000.');
 });

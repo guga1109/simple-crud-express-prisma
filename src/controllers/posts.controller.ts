@@ -11,6 +11,7 @@ export const getPosts = async (req: Request, res: Response) => {
 
 export const getPost = async (req: Request, res: Response) => {
     const postId = parseInt(req.query.id as string);
+    console.log(req.session);
     
     if (postId == null || postId === 0) {
         return res.status(400).json({
@@ -34,7 +35,8 @@ export const getPost = async (req: Request, res: Response) => {
 };
 
 export const createPost = async (req: Request, res: Response) => {
-    const postModel = new Post(req.body.title, req.body.name, req.body.content, req.body.authorId);
+    const { title, name, content } = req.body;
+    const postModel = new Post(title, name, content, req.session.user!.id);
     
     const validation = await validate(postModel);
 

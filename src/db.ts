@@ -1,7 +1,23 @@
-﻿import { PrismaClient } from '@prisma/client'
+﻿import bcrypt from 'bcrypt';
+import { PrismaClient } from '@prisma/client'
 
 const prismaClientSingleton = () => {
-    return new PrismaClient()
+    return new PrismaClient().$extends({
+       model: {
+           user: {
+              async signUp(name: string, email: string, password: string) {
+                  const passwordHash = bcrypt.hashSync(password, 10);
+                  await prisma.user.create({
+                      data: {
+                          email: email,
+                          passwordHash: passwordHash,
+                          name: name
+                      }
+                  })
+              }
+           }
+       } 
+    });
 }
 
 declare const globalThis: {

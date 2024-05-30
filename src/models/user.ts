@@ -1,18 +1,13 @@
-﻿import {Contains, IsEmail, IsNotEmpty, Matches, MaxLength, MinLength} from "class-validator";
+﻿import {z} from "zod";
 
-export class User {
-    @IsNotEmpty()
-    name: string;
-    
-    @Matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?%#&^]{8,}$")
-    password: string;
-    
-    @IsEmail()
-    email: string;
-    
-    constructor(email: string, password: string, name: string) {
-        this.email = email;
-        this.password = password;
-        this.name = name;
-    }
-}
+export const UserSchema = z.object({
+    email: z.string().email({
+        message: "Invalid email format"
+    }),
+    password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?%#&^]{8,}$/, {
+        message: "Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase, one number and one special character"
+    }),
+    name: z.string().min(3).max(40, {
+        message: "Name must be between 3 and 40 characters long"
+    })
+})

@@ -1,30 +1,12 @@
-﻿import { IsBoolean, Length, Min } from "class-validator";
+﻿import { z } from "zod";
 
-export class Post {
-    @Length(5, 20, {
-        message: 'Post title must be greater than 5 characters long'
-    })  
-    title: string;
-    
-    @Length(5, 500, {
-        message: 'Post content must be greater than 5 characters long'
-    })
-    content: string;
-    
-    @Min(1, {
-        message: 'Author ID cannot be null'
-    })
-    authorId: number;
-    
-    @IsBoolean({
-        message: 'Active must be either true or false'
-    })
-    active: boolean;
-    
-    constructor(title:string, content: string, active: boolean, authorId: number) {
-        this.title = title;
-        this.content = content;
-        this.authorId = authorId;
-        this.active = active;
-    }
-}
+export const PostSchema = z.object({
+    id: z.number(),
+    title: z.string().min(5).max(20, {
+        message: 'Post title must be between 5 and 20 characters long'
+    }),
+    content: z.string().min(5).max(500, {
+        message: 'Post content must be between 5 and 500 characters long'
+    }),
+    active: z.boolean()
+})

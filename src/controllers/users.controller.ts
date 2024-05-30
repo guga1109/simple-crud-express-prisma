@@ -1,19 +1,28 @@
 ﻿import { Request, Response } from 'express';
-import { validate } from "class-validator";
-import { Login } from "../models/login";
+import { LoginSchema } from "../models/login";
 import prisma from "../db";
-import {User} from "../models/user";
 import bcrypt from "bcrypt";
 
+/**
+ * Handles user login.
+ *
+ * @param req - The Express request object.
+ * @param res - The Express response object.
+ *
+ * @returns A Promise that resolves to void.
+ *
+ * @throws Will throw an error if the email or password is invalid.
+ * @throws Will throw an error if there is an internal server error.
+ */
 export const login = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
         
-        const validation = await validate(new Login(email, password));
-
-        if (validation.length > 0){
+        const validation = LoginSchema.safeParse(req.body);
+        
+        if (!validation.success) {
             return res.status(400).send({
-                errors: validation,
+                errors: validation.error,
             });
         }
         
@@ -48,11 +57,29 @@ export const login = async (req: Request, res: Response) => {
     }
 };
 
+/**
+ * Handles user sign up.
+ *
+ * @param req - The Express request object.
+ * @param res - The Express response object.
+ *
+ * @returns A Promise that resolves to void.
+ *
+ * @throws Will throw an error if the email is already in use.
+ * @throws Will throw an error if the email or password is invalid.
+ * @throws Will throw an error if there is an internal server error.
+ */
 export const signUp = async (req: Request, res: Response) => {
     try {
         const { name, email, password } = req.body;
-
-        const validation = await validate(new User(email, password, name));
+        
+        const validation = LoginSchema.safeParse(req.body);
+        
+        if (!validation.success) {
+            return res.status(400).send({
+                errors: validation.error,
+            });
+        }
         
         const existingUser = await prisma.user.findUnique({
             where: {
@@ -66,12 +93,6 @@ export const signUp = async (req: Request, res: Response) => {
                 error: "Email already in use"
             })
         }
-
-        if (validation.length > 0){
-            return res.status(400).send({
-                errors: validation,
-            });
-        }
         
         await prisma.user.signUp(name, email, password);
         
@@ -83,6 +104,17 @@ export const signUp = async (req: Request, res: Response) => {
     }
 }
 
+/**
+ * Handles user logout.
+ *
+ * @param req - The Express request object.
+ * @param res - The Express response object.
+ *
+ * @returns A Promise that resolves to void.
+ *
+ * @remarks
+ * This function logs out the user by clearing the session data and redirecting to the home page.
+ */
 export const logout = async (req: Request, res: Response) => {
     req.session.save(() => {
         req.session.user = undefined;
